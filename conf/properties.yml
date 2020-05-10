@@ -29,7 +29,7 @@ router:
                 stripPrefix: true
                 timeout: 30
             ai:
-                path: /gitchat
+                path: /gitchat/**
                 url: https://gitbook.cn
                 stripPrefix: false
                 timeout: 5
