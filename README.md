@@ -2,7 +2,7 @@
 
 ## 获取代码
 ```shell
-go get -u https://github.com/wisrc/gateway
+go get -u github.com/wisrc/gateway
 ```
 
 ## 配置介绍
