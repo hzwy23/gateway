@@ -29,7 +29,7 @@ router:
                 stripPrefix: true
                 timeout: 30
             ai:
-                path: /gitchat/columns/category/5d8b7c3786194a1921979123?page=1
+                path: /gitchat
                 url: https://gitbook.cn
                 stripPrefix: false
                 timeout: 5
