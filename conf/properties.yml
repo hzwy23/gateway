@@ -1,0 +1,35 @@
+server:
+    port: 8790
+    contextPath: /
+    timeout: 10
+    host:
+registerCenter:
+    refreshFrequency: 30
+    eureka:
+        serviceUrls: [ http://localhost:8761 ]
+router:
+    gateway:
+        ignoredPatterns: [ /gateway, /js, /css ]
+        sensitiveHeaders: [Cookie]
+        routers:
+            message:
+                path: /message/**
+                timeout: 10
+                stripPrefix: true
+                url: http://10.112.4.16:31666
+            device:
+                path: /device/**
+                serviceId: msdevice
+                stripPrefix: true
+                timeout: 10
+            user:
+                path: /map/**
+                serviceId: map
+                url: http://www.baidu.com
+                stripPrefix: true
+                timeout: 30
+            ai:
+                path: /gitchat/columns/category/5d8b7c3786194a1921979123?page=1
+                url: https://gitbook.cn
+                stripPrefix: false
+                timeout: 5
