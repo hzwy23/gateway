@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"github.com/wisrc/gateway/config"
 	"github.com/wisrc/gateway/core/context"
 	"github.com/wisrc/gateway/core/filter"
@@ -78,8 +77,6 @@ func (r *GatewayProxy)httpProxy(ctx *context.GatewayContext) error {
 			req.URL.Path = remoteUrl.Path
 
 			r.filterSensitiveHeaders(req)
-			fmt.Println(req.Header)
-
 
 			if ctx.Request.URL.RawQuery == "" || req.URL.RawQuery == "" {
 				req.URL.RawQuery = ctx.Request.URL.RawQuery + req.URL.RawQuery
