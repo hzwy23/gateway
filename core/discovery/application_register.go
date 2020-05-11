@@ -1,7 +1,11 @@
 package discovery
 
 import (
+	"github.com/wisrc/gateway/config"
+	"github.com/wisrc/gateway/logger"
+	"strings"
 	"sync"
+	"time"
 )
 
 type AppService struct {
@@ -23,11 +27,50 @@ type AppInstance struct {
 	Secure bool
 }
 
-var serviceRegister = make(map[string]*AppService)
-var lock = &sync.RWMutex{}
+const (
+	UP   = "UP"
+	DOWN = "DOWN"
+)
 
-func UpdateApplication(app *AppService) {
-	lock.Lock()
-	defer lock.Unlock()
-	serviceRegister[app.ServiceId] = app
+type ApplicationRegisterCenter struct {
+	Services map[string]*AppService
+	lock *sync.RWMutex
+}
+
+var serviceRegister = &ApplicationRegisterCenter{
+	Services: make(map[string]*AppService),
+	lock: &sync.RWMutex{},
+}
+
+func UpdateApplication(app *AppService)  {
+	serviceRegister.UpdateApplication(app)
+}
+
+func (r *ApplicationRegisterCenter)UpdateApplication(app *AppService) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+	r.Services[strings.ToUpper(app.ServiceId)] = app
+}
+
+func (r *ApplicationRegisterCenter)refresh() {
+	registerCenter := config.GetRegisterCenter()
+	ticker := time.NewTicker(time.Second * registerCenter.RefreshFrequency)
+	go func(ticker *time.Ticker) {
+		for {
+			<-ticker.C
+			logger.Info("服务状态检测程序更新...")
+			for key, app := range r.Services {
+				if app.UpdateTime-time.Now().Unix() > registerCenter.RefreshFrequency.Nanoseconds()*2 {
+					logger.Error(key, "，服务服务DOWN")
+					r.lock.Lock()
+					delete(r.Services, key)
+					r.lock.Unlock()
+				}
+			}
+		}
+	}(ticker)
+}
+
+func init() {
+	serviceRegister.refresh()
 }

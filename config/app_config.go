@@ -14,7 +14,7 @@ type AppConfig struct {
 	RegisterCenter *RegisterCenter `yaml:"registerCenter"`
 
 	// 路由配置信息
-	Router *GatewayRouter `yaml:"router"`
+	GatewayRouter *Routers `yaml:"gateway"`
 
 	// web 服务配置信息
 	Server *ServerConfig `yaml:"server"`
@@ -24,8 +24,8 @@ func GetServerConfig() *ServerConfig {
 	return appConfig.Server
 }
 
-func GetGatewayRouter() *GatewayRouter {
-	return appConfig.Router
+func GetGatewayRouter() *Routers {
+	return appConfig.GatewayRouter
 }
 
 func GetRegisterCenter() *RegisterCenter {

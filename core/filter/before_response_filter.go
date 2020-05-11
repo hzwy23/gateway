@@ -7,51 +7,53 @@ import (
 	"github.com/wisrc/gateway/logger"
 )
 
-type BeforeResponse func(ctx *context.GatewayContext)  error
-
-var beforeResponseFunc []BeforeResponse
+var beforeResponseFunc []Handler
 var beforeResponseLock = &sync.RWMutex{}
 
-func RegisterBeforeResponse(handle BeforeResponse, filterName string) {
+func registerBeforeResponse(handle Handler) {
 	beforeResponseLock.Lock()
 	defer beforeResponseLock.Unlock()
-	logger.Info("注册响应前过滤器，过滤器名称是：", filterName)
-	beforeResponseFunc = append(beforeResponseFunc, handle)
+	logger.Info("注册响应前过滤器，过滤器名称是：", handle.Name)
+
+	result := make([]Handler, len(afterResponseFunc) + 1)
+
+	if len(beforeResponseFunc) == 0 {
+		result = append(beforeResponseFunc, handle)
+	} else {
+		for idx, h := range beforeResponseFunc {
+			if h.Priority > handle.Priority {
+				if idx == 0 {
+					// 第一个元素
+					f := []Handler{handle}
+					result = append(f, beforeResponseFunc[0])
+				} else if idx + 1 == len(beforeResponseFunc) {
+					// 最后一个元素
+					last := beforeResponseFunc[idx]
+					v := append(beforeResponseFunc[:idx], handle)
+					result = append(v, last)
+				} else {
+					// 中间元素
+					v := append(beforeResponseFunc[:idx], handle)
+					result = append(v, beforeResponseFunc[idx:]...)
+				}
+				break
+			}
+			result = append(beforeResponseFunc, handle)
+		}
+	}
+	beforeResponseFunc = result
 }
 
 func BeforeResponseFilter(ctx *context.GatewayContext) error {
 	beforeResponseLock.RLock()
 	defer beforeResponseLock.RUnlock()
 
-	for _, handle := range beforeResponseFunc {
-		err := handle(ctx)
+	for _, f := range beforeResponseFunc {
+		err := f.Handle(ctx)
 		if err != nil {
 			logger.Error(err)
 			return  err
 		}
 	}
 	return nil
-}
-
-func init() {
-
-	//RegisterBeforeResponse(func(ctx *context.GatewayContext)  error {
-	//	// 读取返回结果
-	//	body, err := ioutil.ReadAll(ctx.Response.Body)
-	//	if err != nil {
-	//		logger.Error(err)
-	//		return response.NewError(response.ParseHttpResponseFailed, err.Error())
-	//	}
-	//	ctx.Body = body
-	//
-	//	ctx.Response.Body = ioutil.NopCloser(bytes.NewReader(body))
-	//	return errors.New("demo")
-	//}, "读取响应值")
-
-	RegisterBeforeResponse(func(ctx *context.GatewayContext) error {
-		// 读取返回结果
-		logger.Info("请求地址是：",ctx.RemoteURL.String(),", 响应状态吗：", ctx.Response.StatusCode)
-		return nil
-	}, "读取 http 状态吗")
-
 }

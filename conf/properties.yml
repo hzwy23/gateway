@@ -7,29 +7,18 @@ registerCenter:
     refreshFrequency: 30
     eureka:
         serviceUrls: [ http://localhost:8761 ]
-router:
-    gateway:
-        ignoredPatterns: [ /gateway, /js, /css ]
-        sensitiveHeaders: [Cookie]
-        routers:
-            message:
-                path: /message/**
-                timeout: 10
-                stripPrefix: true
-                url: http://10.112.4.16:31666
-            device:
-                path: /device/**
-                serviceId: msdevice
-                stripPrefix: true
-                timeout: 10
-            user:
-                path: /map/**
-                serviceId: map
-                url: http://www.baidu.com
-                stripPrefix: true
-                timeout: 30
-            ai:
-                path: /gitchat/**
-                url: https://gitbook.cn
-                stripPrefix: false
-                timeout: 5
+
+gateway:
+    ignoredPatterns: [ /gateway, /js, /css ]
+    sensitiveHeaders: [Cookie]
+    routers:
+        user:
+            path: /map/**
+            serviceId: map
+            stripPrefix: true
+            timeout: 30
+        gitbook:
+            path: /gitchat/**
+            url: https://gitbook.cn
+            stripPrefix: false
+            timeout: 5

@@ -4,10 +4,6 @@ import (
 	"time"
 )
 
-type GatewayRouter struct {
-	Gateway Routers `yaml:"gateway"`
-}
-
 type Routers struct {
 	Routers          map[string]RouterDetails
 	IgnoredPatterns  []string `yaml:"ignoredPatterns"`

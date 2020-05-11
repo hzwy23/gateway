@@ -62,7 +62,7 @@ func Match(path string) (*url.URL, *Router , error) {
 			return remoteUrl,route, nil
 		}
 	} else {
-		inst, err := discovery.GetService(route.Details.ServiceId)
+		inst, err := discovery.GetServiceInstance(route.Details.ServiceId)
 		if err != nil {
 			return nil, route, err
 		}
@@ -122,7 +122,7 @@ func init() {
 
 	routerConfig := config.GetGatewayRouter()
 
-	for _, v := range routerConfig.Gateway.Routers {
+	for _, v := range routerConfig.Routers {
 
 		subList := strings.Split(strings.TrimLeft(v.Path, "/"), "/")
 		if len(subList) == 0 {

@@ -13,10 +13,7 @@ import (
 
 const EUREKA_APPS = "/eureka/apps"
 
-const (
-	UP   = "UP"
-	DOWN = "DOWN"
-)
+
 
 type EurekaApps struct {
 	Applications struct {
@@ -95,7 +92,7 @@ func updateRegister(apps *EurekaApps) {
 	for _, app := range apps.Applications.Application {
 		instances := make([]*discovery.AppInstance, 0)
 		for _, inst := range app.Instance {
-			if inst.Status != UP {
+			if inst.Status != discovery.UP {
 				logger.Error("DOWN 掉的实例", inst.App, ",", inst.InstanceId, ",", inst.IpAddr, ",", inst.Status)
 				continue
 			}

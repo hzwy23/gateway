@@ -124,7 +124,7 @@ func (r *GatewayProxy)globalRecover(ctx *context.GatewayContext, errMsg interfac
 
 // filterSensitiveHeaders 过滤掉请求 Header 中配置的 Key
 func (r *GatewayProxy) filterSensitiveHeaders(req *http.Request)  {
-	for _, header := range config.GetGatewayRouter().Gateway.SensitiveHeaders {
+	for _, header := range config.GetGatewayRouter().SensitiveHeaders {
 		req.Header.Del(header)
 	}
 }
