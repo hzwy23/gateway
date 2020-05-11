@@ -2,20 +2,31 @@ package eureka
 
 import (
 	"encoding/json"
+	"github.com/wisrc/gateway/core/discovery/register"
 	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/wisrc/gateway/config"
-	"github.com/wisrc/gateway/core/discovery"
 	"github.com/wisrc/gateway/logger"
 )
 
-const EUREKA_APPS = "/eureka/apps"
+const eurekaApp = "/eureka/apps"
 
+type eurekaRegister struct {
+	register *register.ApplicationRegisterCenter
+}
 
+func NewEurekaRegister() *register.ApplicationRegisterCenter {
+	reg := register.NewApplicationRegisterCenter()
+	r := &eurekaRegister{
+		register: reg,
+	}
+	r.enableEurekaClient()
+	return reg
+}
 
-type EurekaApps struct {
+type eurekaApps struct {
 	Applications struct {
 		VersionsDelta string `json:"versions__delta"`
 		AppsHashcode  string `json:"apps__hashcode"`
@@ -40,7 +51,8 @@ type EurekaApps struct {
 	} `json:"applications"`
 }
 
-func EnableEurekaClient() {
+
+func (r *eurekaRegister)enableEurekaClient() {
 
 	conf := config.GetRegisterCenter()
 	eurekaRefresh := time.NewTicker(time.Second * conf.RefreshFrequency)
@@ -49,26 +61,26 @@ func EnableEurekaClient() {
 		for {
 			logger.Info("同步 Eureka 注册中心")
 			for _, url := range conf.EurekaConfig.ServiceUrls {
-				remoteUrl := url + EUREKA_APPS
-				body, err := httpRequest(http.MethodGet, remoteUrl)
+				remoteUrl := url + eurekaApp
+				body, err := r.httpRequest(http.MethodGet, remoteUrl)
 				if err != nil {
 					logger.Error(err.Error())
 					continue
 				}
-				rst := EurekaApps{}
+				rst := eurekaApps{}
 				err = json.Unmarshal(body, &rst)
 				if err != nil {
 					logger.Error(err.Error())
 					continue
 				}
-				go updateRegister(&rst)
+				go r.updateRegister(&rst)
 			}
 			<-tick.C
 		}
 	}(eurekaRefresh)
 }
 
-func httpRequest(method, url string) ([]byte, error) {
+func (r *eurekaRegister)httpRequest(method, url string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -88,11 +100,11 @@ func httpRequest(method, url string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func updateRegister(apps *EurekaApps) {
+func (r *eurekaRegister)updateRegister(apps *eurekaApps) {
 	for _, app := range apps.Applications.Application {
-		instances := make([]*discovery.AppInstance, 0)
+		instances := make([]*register.AppInstance, 0)
 		for _, inst := range app.Instance {
-			if inst.Status != discovery.UP {
+			if inst.Status != register.UP {
 				logger.Error("DOWN 掉的实例", inst.App, ",", inst.InstanceId, ",", inst.IpAddr, ",", inst.Status)
 				continue
 			}
@@ -107,7 +119,7 @@ func updateRegister(apps *EurekaApps) {
 				logger.Error("服务已经关闭了")
 			}
 
-			instance := &discovery.AppInstance{
+			instance := &register.AppInstance{
 				InstanceId: inst.InstanceId,
 				IpAddr:     inst.IpAddr,
 				Status:     inst.Status,
@@ -117,11 +129,11 @@ func updateRegister(apps *EurekaApps) {
 			instances = append(instances, instance)
 		}
 
-		appService := &discovery.AppService{
+		appService := &register.AppService{
 			ServiceId:  app.Name,
 			Instances:  instances,
 			UpdateTime: time.Now().Unix(),
 		}
-		discovery.UpdateApplication(appService)
+		r.register.UpdateApplication(appService)
 	}
 }

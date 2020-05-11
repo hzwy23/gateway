@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/wisrc/gateway/core"
-	"github.com/wisrc/gateway/core/discovery/eureka"
+	"github.com/wisrc/gateway/core/discovery/register/eureka"
 	_ "net/http/pprof"
 	"testing"
 )

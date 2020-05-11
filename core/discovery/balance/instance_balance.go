@@ -1,50 +1,49 @@
-package discovery
+package balance
 
 import (
 	"errors"
+	"github.com/wisrc/gateway/core/discovery/register"
 	"math/rand"
 	"strings"
 	"time"
 )
 
 type InstanceBalance struct {
-	RegisterCenter *ApplicationRegisterCenter
+	register *register.ApplicationRegisterCenter
 }
 
-var instanceBalance = &InstanceBalance{
-	RegisterCenter: serviceRegister,
-}
-
-func GetServiceInstance(serviceId string)(*AppInstance, error)  {
-	return instanceBalance.GetService(serviceId)
+func NewInstanceBalance(register *register.ApplicationRegisterCenter) *InstanceBalance {
+	return &InstanceBalance{
+		register: register,
+	}
 }
 
 // GetService 根据微服务名，获取微服务 Scheme，IP，Port 信息
-func (r *InstanceBalance)GetService(serviceId string) (*AppInstance, error) {
+func (r *InstanceBalance)GetService(serviceId string) (*register.AppInstance, error) {
 	id := strings.ToUpper(serviceId)
-	if app, ok := r.RegisterCenter.Services[id]; ok {
+	if app, ok := r.register.Services[id]; ok {
 		return r.getInstance(app)
 	}
 	return nil, errors.New(serviceId + ",应用服务不存在")
 }
 
 // getInstance 获取有效的实例
-func (r *InstanceBalance)getInstance(app *AppService) (*AppInstance, error) {
-	r.RegisterCenter.lock.RLock()
+func (r *InstanceBalance)getInstance(app *register.AppService) (*register.AppInstance, error) {
+	r.register.Lock.RLock()
 	rand.Seed(time.Now().UnixNano())
 	idx := rand.Intn(len(app.Instances))
 	inst := app.Instances[idx]
-	if inst.Status == DOWN {
+	if inst.Status == register.DOWN {
 		// 服务已过期
-		r.RegisterCenter.lock.RUnlock()
-		r.RegisterCenter.lock.Lock()
+		r.register.Lock.RUnlock()
+		r.register.Lock.Lock()
 		app.Instances = append(app.Instances[:idx], app.Instances[idx+1:]...)
-		r.RegisterCenter.lock.Unlock()
+		r.register.Lock.Unlock()
 		if len(app.Instances) == 0 {
 			return nil, errors.New("无有效的实例")
 		}
 		return r.getInstance(app)
 	}
-	r.RegisterCenter.lock.RUnlock()
+	r.register.Lock.RUnlock()
 	return inst, nil
 }

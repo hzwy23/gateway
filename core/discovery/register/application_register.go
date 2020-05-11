@@ -1,4 +1,4 @@
-package discovery
+package register
 
 import (
 	"github.com/wisrc/gateway/config"
@@ -34,21 +34,21 @@ const (
 
 type ApplicationRegisterCenter struct {
 	Services map[string]*AppService
-	lock *sync.RWMutex
+	Lock *sync.RWMutex
 }
 
-var serviceRegister = &ApplicationRegisterCenter{
-	Services: make(map[string]*AppService),
-	lock: &sync.RWMutex{},
-}
-
-func UpdateApplication(app *AppService)  {
-	serviceRegister.UpdateApplication(app)
+func NewApplicationRegisterCenter() *ApplicationRegisterCenter {
+	r := &ApplicationRegisterCenter{
+		Services: make(map[string]*AppService),
+		Lock: &sync.RWMutex{},
+	}
+	go r.refresh()
+	return r
 }
 
 func (r *ApplicationRegisterCenter)UpdateApplication(app *AppService) {
-	r.lock.Lock()
-	defer r.lock.Unlock()
+	r.Lock.Lock()
+	defer r.Lock.Unlock()
 	r.Services[strings.ToUpper(app.ServiceId)] = app
 }
 
@@ -62,15 +62,11 @@ func (r *ApplicationRegisterCenter)refresh() {
 			for key, app := range r.Services {
 				if app.UpdateTime-time.Now().Unix() > registerCenter.RefreshFrequency.Nanoseconds()*2 {
 					logger.Error(key, "，服务服务DOWN")
-					r.lock.Lock()
+					r.Lock.Lock()
 					delete(r.Services, key)
-					r.lock.Unlock()
+					r.Lock.Unlock()
 				}
 			}
 		}
 	}(ticker)
-}
-
-func init() {
-	serviceRegister.refresh()
 }

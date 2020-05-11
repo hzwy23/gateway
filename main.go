@@ -2,11 +2,11 @@ package main
 
 import (
 	"github.com/wisrc/gateway/core"
-	"github.com/wisrc/gateway/core/discovery/eureka"
+	"github.com/wisrc/gateway/core/discovery"
 )
 
 func main() {
-	eureka.EnableEurekaClient()
+	discovery.EnableDiscovery()
 	server := core.NewAPIGatewayServer()
 	server.Start()
 }
