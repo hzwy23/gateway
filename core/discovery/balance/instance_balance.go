@@ -30,18 +30,24 @@ func (r *InstanceBalance)GetService(serviceId string) (*register.AppInstance, er
 // getInstance 获取有效的实例
 func (r *InstanceBalance)getInstance(app *register.AppService) (*register.AppInstance, error) {
 	r.register.Lock.RLock()
+	// 生成随机数，从现有节点随机选取一个节点
 	rand.Seed(time.Now().UnixNano())
 	idx := rand.Intn(len(app.Instances))
 	inst := app.Instances[idx]
 	if inst.Status == register.DOWN {
 		// 服务已过期
 		r.register.Lock.RUnlock()
+
+		// 剔除宕机的服务
 		r.register.Lock.Lock()
 		app.Instances = append(app.Instances[:idx], app.Instances[idx+1:]...)
 		r.register.Lock.Unlock()
+
+		// 如果可用节点为空，则服务所有节点已宕机
 		if len(app.Instances) == 0 {
 			return nil, errors.New("无有效的实例")
 		}
+		// 在剩余正常实例中查找可用的节点
 		return r.getInstance(app)
 	}
 	r.register.Lock.RUnlock()

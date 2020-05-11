@@ -53,7 +53,6 @@ type eurekaApps struct {
 
 
 func (r *eurekaRegister)enableEurekaClient() {
-
 	conf := config.GetRegisterCenter()
 	eurekaRefresh := time.NewTicker(time.Second * conf.RefreshFrequency)
 	go func(tick *time.Ticker) {
