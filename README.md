@@ -2,8 +2,8 @@
 
 ## 获取代码
 ```shell
-go get github.com/wisrc/gateway
-cd $GOPATH/src/github.com/wisrc/gateway
+git clone https://github.com/hzwy23/gateway.git
+cd gateway
 go mod tidy
 go run main.go
 ```
