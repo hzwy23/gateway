@@ -2,7 +2,10 @@
 
 ## 获取代码
 ```shell
-go get -u github.com/wisrc/gateway
+go get github.com/wisrc/gateway
+cd $GOPATH/src/github.com/wisrc/gateway
+go mod tidy
+go run main.go
 ```
 
 ## 配置介绍
