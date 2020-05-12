@@ -1,6 +1,11 @@
 # API 网关
 
-## 获取代码
+```cassandraql
+Go SDK > 1.11
+```
+
+
+## 获取代码并运行（go mod 管理项目）
 ```shell
 git clone https://github.com/hzwy23/gateway.git
 cd gateway
